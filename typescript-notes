@@ -1,0 +1,294 @@
+Typescript Notes
+
+
+Index signatures
+Sometimes we need to represent a type for dictionaries, where values of a consistent type are retrievable by 
+
+
+Structural vs Nominal types
+
+As we discussed earlier, type-checking can be thought of as a task that attempts to evaluate the question of compatibility or type equivalence.
+Typescript mainly checks can you assign this type to that type.
+
+
+TypeScript’s type system is static.
+
+
+“Duck typing” gets its name from the “duck test”.
+“If it looks like a duck, swims like a duck, and quacks like a duck, then it’s probably is a duck”.
+In practice, this is very similar to structural typing, but “Duck typing” is usually used to describe dynamic type systems.
+
+
+Nominal type systems are all about names. Checks only for the are you instance of the class. Not properties.
+
+Typescript’s system is structural, it is about structure/shape. All properties are correct etc.
+
+
+| for OR typing aka union
+& is used for intersection
+
+
+We can’t make all the types with interface. e.g type UserInfoOutcomeError = readonly ["error", Error]
+
+Interface has main keyword extends
+Interface can’t describe union type. 
+
+You can redeclare interface unlike other variables etc.
+When you redeclare the interface you add new properties to the global one (or from the 3rd party library)
+
+Interfaces are open, type aliases not. You can’t redeclare.
+While redeclaration, you can’t override but extend.
+
+
+Top and bottom types
+
+Type systems often have types representing the largest and smallest possible sets of values. These are called top and bottom types.
+Any is top type which accepts everything. And it is possible to access any deep property. Typescript won’t complain even though any property is not there. 
+Unknown is another top type. We can accept any value however it has difference. We have to narrow the type to access the papery for example. Values with an unknown type cannot be used without first applying a type guard. Sometimes people refer to this property of unknown by describing it as “opaque”.
+
+For example with if check blocks we can narrow down to the specific type. 
+
+Some examples of top types.  unknown is great for values received at runtime (e.g., your data layer). By obligating consumers of these values to perform some light validation before using them, errors are caught earlier, and can often be surfaced with more context.
+Another wise use of unknown is handling throwables in a catch block
+
+When we migrate from JS to TS, a lot of things will be any at first. For example error catch block by default will give any to variable `e` and we can say it unknown to narrow down to the specific type
+Also with `useUnknownInCatchVariables: true` will make throwable by default any.
+
+
+
+
+object is almost top type. All possible values except primitives.  Null and undefined is 2 of 7 primitive types and not allowed to assign to object (if strictNullCheck is true).
+
+Almost top type: Empty object {}
+
+The empty object type {} represents the set { all possible values, except for null and undefined }
+We can assign string date, number to the variables has type {} empty object.
+You can use the type {} in combination with the intersection type operator & to remove nullability from another type
+
+
+For example, 
+type NullableStringOrNumber = string | number | null | undefined;
+type StringOrNumber = NullableStringOrNumber & {}
+In this way, we can narrow and exclude null and undefineds from variable.
+
+
+Bottom types:
+
+A bottom type (symbol: ⊥) is a type that describes no possible value allowed by the system. To use our set theory mental model, we could describe this as a type representing the set { } (intentionally empty). 
+There is one bottom type in TS: never
+It means you shouldn’t reach there, nothing should be left from possible types options. 
+
+We can create error class with never. So it can be error for UnreachableCode(arg: never).
+
+
+Unit types:
+
+Unit types are types that represent a set of exactly one value. An example of this is a literal type. In TypeScript, the types null and undefined are both unit types.
+We can’t exchange them. 
+
+Void is almost unit type, it can check against undefined as well.
+
+
+
+
+Nullish Values
+
+Although null, void and undefined are all used to describe “nothing” or “empty”, they are independent types in TypeScript. 
+Null means that there is a value which is nothing.  This nothing is very much a defined value, and is certainly a presence — not an absence — of information.
+
+undefined means the value isn’t available (yet?)
+
+void should exclusively be used to describe that a function’s return value should be ignored
+
+! Is used for not-null assertion. 
+
+The non-null assertion operator (!.) is used to cast away the possibility that a value might be null or undefined.
+Keep in mind that the value could still be null or undefined, this operator just tells TypeScript to ignore that possibility.
+If the value does turn out to be missing, you will get the familiar cannot call foo on undefined family of errors at runtime:
+
+
+Definite assignment assertion
+
+The definite assignment !: assertion is used to suppress TypeScript’s objections about a class field being used, when it can’t be proven1 that it was initialized.
+
+If you don’t put it, TS will complain that someone might use it without instantiating. 
+
+Optional Chaining
+
+A less hazardous tool, relative to the non-null assertion operator is optional chaining.
+You can also use if contains for presence check which can get tedious in complex data structures. However using optional chaining with `?` mark, you can make shorter
+
+  return data?.customer?.lastInvoice?.lastPayment?.amount
+
+function getLastPayment(data: ResponseData): number | undefined {
+  return data?.customer?.lastInvoice?.lastPayment?.amount
+}
+This is complied as following
+function getLastPayment(data) {
+    var _a, _b, _c;
+    return (_c = (_b = (_a = data === null || data === void 0 ? void 0 : data.customer) === null || _a === void 0 ? void 0 : _a.lastInvoice) === null || _b === void 0 ? void 0 : _b.lastPayment) === null || _c === void 0 ? void 0 : _c.amount;
+}
+
+
+Similar to the optional chaining operator, nullish coalescing allows for succinct handling of the possibility that something might be undesirably null or undefined.
+
+If we use || in that case it can ignore 0 while ?? This will work only in case of null or undefined.
+
+Modules
+
+The JS ecosystem was without an “official” module specification until 2015, which led to a variety of different community-defined module types, including…
+* CommonJS
+* AMD (RequireJS)
+* UMD
+AMD and UMD modules are increasingly rare these days, but CommonJS has stuck around, in part due to it still being the default module type for code that runs in Node.js.
+
+Import/expores
+
+First, let’s get the conventional stuff out of the way: TypeScript does exactly what you’re used to seeing in modern JavaScript code.
+Example
+// named imports
+import { Blueberry, Raspberry } from './berries'
+import Kiwi from './kiwi' // default import
+
+export function makeFruitSalad() {} // named export
+
+export default class FruitBasket {} // default export
+
+export { lemon, lime } from './citrus' // re-export
+export * as berries from './berries' // re-export entire module as a single namespac
+
+CommonJS Interop
+
+module.exports = {Class} - this is commonJS syntax which node js understands
+
+const fs = require("fs")
+fs.readFileSync('example.txt')
+ From JS to TS
+
+// namespace import
+import * as fs from "fs"
+fs.readFileSync('example.txt')
+
+Or 
+import { readFileSync } from "fs"
+readFileSync('example.txt')
+
+Native ES Modules
+Typescript supports native ES modules. 
+
+* Files with the .mjs extension are treated as native ES modules
+* Files with the .cjs extension are treated as CJS modules
+
+You can also indicate whether .js files in your project should be treated as ES or CJS modules. In your package.json you may include a top-level "type" field with either of the following values
+* "module" indicates that .js files should be run as ES modules
+* "commonjs" indicates that .js files should be run as CommonJS
+
+Note that even as of Node 20.8.0, Node.js still assumes .js files are CommonJS if you specify no "type" field at all in your "package.json"
+
+
+TypeScript 5 supports native modules that follow the established conventions, replacing the j with a t (just as is done for .jsx and .tsx files). .
+* .mts files are for TypeScript ES modules, and generate ES modules as output
+* .cts files are for TypeSCript CJS modules, and generate CJS modules as output
+
+Importing non-ts files
+
+We might need to import png files.
+
+// @filename: global.d.ts
+declare module "*.png" {
+  const imgUrl: string
+  export default imgUrl
+}
+// @filename: component.ts
+import img from "./file.png"
+
+
+Conditional Types
+
+In a wide range of programming languages, we can find if/then/else logic. JavaScript provides a ternary1 operator that allows us to express this kind of logic concisely. For example.
+const isXNegative = x >= 0 ? "no" : "yes"
+
+Conditional types allow for types to be expressed using a very similar (basically, the same) syntax
+
+class Grill {
+  startGas() {}
+  stopGas() {}
+}
+class Oven {
+  setTemperature(degrees: number) {}
+}
+ 
+type CookingDevice<T> = T extends "grill" ? Grill : Oven
+ 
+let device1: CookingDevice<"grill">
+      
+
+let device1: Grill
+let device2: CookingDevice<"oven">
+      
+
+let device2: Oven
+
+In this way, we can setup type conditionally
+
+If you pass union type to Type parameter (T), every value individually will be evaluated
+
+
+There are several types that are broadly useful enough that TypeScript includes them as part of the “core types” for the JS language.
+There are 2 new utility types Extract, Exclude
+
+type FavoriteColors =
+  | "dark sienna"
+  | "van dyke brown"
+  | "yellow ochre"
+  | "sap green"
+  | "titanium white"
+  | "phthalo green"
+  | "prussian blue"
+  | "cadium yellow"
+  | [number, number, number]
+  | { red: number; green: number; blue: number }
+ 
+type StringColors = Extract<FavoriteColors, string>
+          
+
+type StringColors = "dark sienna" | "van dyke brown" | "yellow ochre" | "sap green" | "titanium white" | "phthalo green" | "prussian blue" | "cadium yellow"
+type ObjectColors = Extract<FavoriteColors, { red: number }>
+          
+
+type ObjectColors = {
+    red: number;
+    green: number;
+    blue: number;
+}
+type TupleColors
+         
+
+type TupleColors = [number, number, number]
+  = Extract<FavoriteColors, [number, number, number]>
+
+In this code, we can extract part of the type with `Extract` keyword.  We’re Extracting the subset of FavoriteColors that is assignable to string
+
+type NonStringColors = Exclude<FavoriteColors, string> with exclude we are excluding string types from FavoriteColors and keep red, green, blue part
+
+/**
+ * Exclude from T those types that are assignable to U
+ */
+type Exclude<T, U> = T extends U ? never : T
+
+/**
+ * Extract from T those types that are assignable to U
+ */
+type Extract<T, U> = T extends U ? T : never
+
+Inference with conditional types
+
+Conditional types are not just for switching behavior based on comparison — they can be used with an infer keyword to access sub-parts of type information within a larger type
+Infer keyword can only be used in the context of a condition expression (within a conditional type declaration) is an important tool for being able to extract out pieces of type information from other types.
+
+The infer keyword gives us an important tool to solve this problem — it lets us extract and obtain type information from larger types, by capturing pieces of types into a newly-declared type params.
+
+type UnwrapPromise<P> = P extends PromiseLike<infer T> ? T : P;
+We can now access the type with T 
+
+
